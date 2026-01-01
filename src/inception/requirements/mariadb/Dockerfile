@@ -10,6 +10,7 @@ RUN mkdir -p /run/mysqld /var/lib/mysql && \
 COPY ./tools/init_db.sh /init_db.sh
 COPY ./conf/my.cnf /etc/my.cnf.d/mariadb-server.cnf
 
+RUN mkdir -p /var/log/mysql && chown -R mysql:mysql /var/log/mysql
 RUN chmod +x /init_db.sh
 
 EXPOSE 3306

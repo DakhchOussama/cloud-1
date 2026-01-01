@@ -8,12 +8,16 @@ fi
 
 # Start MariaDB temporarily to create database and users
 mysqld --user=mysql --bootstrap << EOF
-USE mysql;
-FLUSH PRIVILEGES;
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
+
 CREATE DATABASE IF NOT EXISTS ${DB_NAME};
+
 CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+
 GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
+
 FLUSH PRIVILEGES;
 EOF
 
