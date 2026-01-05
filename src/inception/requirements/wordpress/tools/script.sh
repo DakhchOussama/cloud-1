@@ -2,7 +2,7 @@
 set -e
 
 echo "Waiting for MariaDB to be ready..."
-until mysql -h"${DB_HOST}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e "SELECT 1" >/dev/null 2>&1; do
+until mysql --protocol=TCP -h"${DB_HOST}" -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e "SELECT 1" >/dev/null 2>&1; do
     echo "MariaDB is unavailable - sleeping"
     sleep 3
 done
