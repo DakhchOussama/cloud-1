@@ -22,9 +22,9 @@ fclean: clean
 re: fclean build
 
 logs:
-	docker compose -f ./src/docker-compose.yml logs -f
+	docker compose -f ./src/inception/docker-compose.yml logs -f
 
 ps:
-	docker compose -f ./src/docker-compose.yml ps
+	docker compose -f ./src/inception/docker-compose.yml ps
 
 .PHONY: all build up down clean fclean re logs ps

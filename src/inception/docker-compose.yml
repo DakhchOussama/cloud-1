@@ -51,19 +51,30 @@ services:
       wordpress:
         condition: service_healthy
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: on-failure
+    env_file:
+      - .env
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_USER=${DB_USER}
+      - PMA_PASSWORD=${DB_PASSWORD}
+      - PMA_PORT=3306
+    ports:
+      - "8080:80"
+    networks:
+      - inceptionNet
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
 volumes:
   my_mariadb:
     driver: local
-    driver_opts:
-      type: none
-      device: ${HOME}/Desktop/data/my_mariadb
-      o: bind
   my_wordpress:
     driver: local
-    driver_opts:
-      type: none
-      device: ${HOME}/Desktop/data/my_wordpress
-      o: bind
 
 networks:
   inceptionNet:
