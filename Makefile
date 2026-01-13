@@ -13,7 +13,13 @@ down:
 
 clean: down
 	@docker volume rm src_my_mariadb src_my_wordpress 2>/dev/null || true
-	@rm -rf ${HOME}/Desktop/data
+	@if [ -d "${HOME}/Desktop/data" ]; then \
+		echo "Cleaning data directory..."; \
+		docker run --rm -v ${HOME}/Desktop/data:/data alpine sh -c "rm -rf /data/*"; \
+		rmdir ${HOME}/Desktop/data/my_mariadb ${HOME}/Desktop/data/my_wordpress 2>/dev/null || true; \
+		rmdir ${HOME}/Desktop/data 2>/dev/null || true; \
+		echo "Data directory cleaned."; \
+	fi
 
 fclean: clean
 	@docker system prune -af

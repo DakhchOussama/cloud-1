@@ -58,7 +58,7 @@ services:
     env_file:
       - .env
     environment:
-      - PMA_HOST=mariadb
+      - PMA_HOST=${DB_HOST}
       - PMA_USER=${DB_USER}
       - PMA_PASSWORD=${DB_PASSWORD}
       - PMA_PORT=3306
