@@ -1,0 +1,143 @@
+---
+- name: Create project directory
+  file:
+    path: "{{ project_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Create requirements subdirectories
+  file:
+    path: "{{ project_dir }}/requirements/{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - mariadb/conf
+    - mariadb/tools
+    - nginx/conf
+    - wordpress/conf
+    - wordpress/tools
+
+- name: Copy Docker Compose file
+  copy:
+    src: ../../../inception/docker-compose.yml
+    dest: "{{ project_dir }}/docker-compose.yml"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Copy MariaDB Dockerfile
+  copy:
+    src: ../../../inception/requirements/mariadb/Dockerfile
+    dest: "{{ project_dir }}/requirements/mariadb/Dockerfile"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Copy MariaDB configuration files
+  copy:
+    src: "../../../inception/requirements/mariadb/conf/{{ item }}"
+    dest: "{{ project_dir }}/requirements/mariadb/conf/{{ item }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  loop:
+    - 50-server.cnf
+    - create_db.sql
+    - my.cnf
+
+- name: Copy MariaDB init script
+  copy:
+    src: ../../../inception/requirements/mariadb/tools/init_db.sh
+    dest: "{{ project_dir }}/requirements/mariadb/tools/init_db.sh"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Copy Nginx Dockerfile
+  copy:
+    src: ../../../inception/requirements/nginx/Dockerfile
+    dest: "{{ project_dir }}/requirements/nginx/Dockerfile"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Copy Nginx configuration
+  copy:
+    src: ../../../inception/requirements/nginx/conf/nginx.conf
+    dest: "{{ project_dir }}/requirements/nginx/conf/nginx.conf"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Copy WordPress Dockerfile
+  copy:
+    src: ../../../inception/requirements/wordpress/Dockerfile
+    dest: "{{ project_dir }}/requirements/wordpress/Dockerfile"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Copy WordPress configuration files
+  copy:
+    src: ../../../inception/requirements/wordpress/conf/www.conf
+    dest: "{{ project_dir }}/requirements/wordpress/conf/www.conf"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Copy WordPress setup script
+  copy:
+    src: ../../../inception/requirements/wordpress/tools/script.sh
+    dest: "{{ project_dir }}/requirements/wordpress/tools/script.sh"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Deploy .env file from template
+  template:
+    src: env.j2
+    dest: "{{ project_dir }}/.env"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+
+- name: Stop existing Docker Compose services (if any)
+  community.docker.docker_compose:
+    project_src: "{{ project_dir }}"
+    state: absent
+  ignore_errors: yes
+
+- name: Start Docker Compose services
+  community.docker.docker_compose:
+    project_src: "{{ project_dir }}"
+    state: present
+    build: yes
+  register: output
+
+- name: Show Docker Compose output
+  debug:
+    var: output
+
+- name: Wait for services to be healthy
+  pause:
+    seconds: 30
+    prompt: "Waiting for services to start and become healthy..."
+
+- name: Verify containers are running
+  community.docker.docker_container_info:
+    name: "{{ item }}"
+  loop:
+    - nginx
+    - wordpress
+    - mariadb
+    - phpmyadmin
+  register: container_info
+
+- name: Display container status
+  debug:
+    msg: "{{ item.item }}: {{ item.container.State.Status if item.exists else 'Not found' }}"
+  loop: "{{ container_info.results }}"

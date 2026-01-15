@@ -1,0 +1,20 @@
+---
+- name: Deploy WordPress Stack with Docker Compose
+  hosts: webservers
+  become: yes
+  vars:
+    docker_compose_version: "2.24.5"
+    project_dir: "/opt/inception"
+    
+  roles:
+    - docker
+    - deploy
+
+  post_tasks:
+    - name: Display deployment information
+      debug:
+        msg:
+          - "Deployment completed successfully!"
+          - "HTTPS (nginx): https://{{ ansible_host }}:443"
+          - "phpMyAdmin: http://{{ ansible_host }}:8080"
+          - "MariaDB is only accessible internally within the Docker network"
