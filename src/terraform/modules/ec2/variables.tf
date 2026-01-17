@@ -13,3 +13,7 @@ variable "subnet_id" {
 variable "sg_id" {
   type = string
 }
+
+variable "key_name" {
+  type = string
+}

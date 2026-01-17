@@ -27,9 +27,9 @@ check_dependencies() {
   for pkg in "${deps[@]}"; do
     if ! command_exists "$pkg"; then
       missing+=("$pkg")
-      echo "  ✗ $pkg is missing"
+      echo "   $pkg is missing"
     else
-      echo "  ✓ $pkg is installed"
+      echo "   $pkg is installed"
     fi
   done
 }

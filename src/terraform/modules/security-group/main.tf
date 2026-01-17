@@ -15,7 +15,7 @@ resource "aws_security_group" "this" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [var.my_ip]
+    cidr_blocks = ["${var.my_ip}/32"]
   }
 
   ingress {
@@ -23,7 +23,7 @@ resource "aws_security_group" "this" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.my_ip]
+    cidr_blocks = ["${var.my_ip}/32"]
   }
 
   egress {
@@ -32,4 +32,9 @@ resource "aws_security_group" "this" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_key_pair" "ec2" {
+  key_name   = "ec2-key"
+  public_key = file(var.ssh_public_key_path)
 }
