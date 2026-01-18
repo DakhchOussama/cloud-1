@@ -6,12 +6,17 @@ services:
     restart: on-failure
     env_file:
       - .env
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - my_mariadb:/var/lib/mysql
     networks:
       - inceptionNet
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USER}", "-p${DB_PASSWORD}"]
+      test: ["CMD-SHELL", "MYSQL_PWD=$DB_ROOT_PASSWORD mysqladmin ping -h localhost -uroot || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

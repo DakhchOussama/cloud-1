@@ -10,7 +10,7 @@ RUN openssl req -x509 -nodes -days 365 \
     -newkey rsa:2048 \
     -keyout /etc/ssl/private/odakhch.key \
     -out /etc/ssl/certs/odakhch.crt \
-    -subj "/C=MA/ST=Beni Mellal-Khenifra/L=Khouribga/O=1337/OU=odakhch/CN=marinadberr.duckdns.org"
+    -subj "/C=MA/ST=Beni Mellal-Khenifra/L=tanger/O=1337/OU=sel-kham/CN=marinadberr.duckdns.org"
 
 # Remove default config and copy custom one
 RUN rm -f /etc/nginx/http.d/default.conf
