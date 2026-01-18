@@ -1,18 +1,20 @@
 ---
 # Database Configuration
-db_name: wordpress
-db_user: wpuser
-db_password: "ChangeMe123!"
-db_root_password: "RootChangeMe123!"
+db_host: "{{ lookup('env', 'DB_HOST') | default('localhost') }}"
+db_name: "{{ lookup('env', 'DB_NAME') | default('inception') }}"
+db_user: "{{ lookup('env', 'DB_USER') | default('odakhch') }}"
+db_password: "{{ lookup('env', 'DB_PASSWORD') | default('SecureDB_Pass123!') }}"
+db_root_password: "{{ lookup('env', 'DB_ROOT_PASSWORD') | default('SecureRoot_Pass456!') }}"
 
-# WordPress Admin Configuration
-wp_admin_user: admin
-wp_admin_password: "AdminChangeMe123!"
-wp_admin_email: admin@example.com
+# WordPress Configuration
+wp_root_user: "{{ lookup('env', 'WP_ROOT_USER') | default('oussamadakhch') }}"
+wp_root_password: "{{ lookup('env', 'WP_ROOT_PASSWORD') | default('AdminWP_Pass789!') }}"
+wp_root_email: "{{ lookup('env', 'WP_ROOT_EMAIL') | default('odakhch@student.1337.ma') }}"
+wp_user: "{{ lookup('env', 'WP_USER') | default('oussama') }}"
+wp_password: "{{ lookup('env', 'WP_PASSWORD') | default('AuthorWP_Pass321!') }}"
+wp_user_email: "{{ lookup('env', 'WP_USER_EMAIL') | default('odakhch@gmail.com') }}"
+wp_title: "{{ lookup('env', 'WP_TITLE') | default('Inception') }}"
+wp_url: "{{ lookup('env', 'WP_URL') | default('https://marinadberr.duckdns.org') }}"
 
-# WordPress Site Configuration
-wp_title: "My WordPress Site"
-wp_url: "https://{{ ansible_host }}"
-
-# Domain Configuration (use your EC2 public IP or domain)
-domain_name: "{{ ansible_host }}"
+# Domain Configuration
+domain_name: "{{ lookup('env', 'DOMAIN_NAME') | default('marinadberr.duckdns.org') }}"

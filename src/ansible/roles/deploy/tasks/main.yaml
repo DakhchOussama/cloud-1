@@ -106,16 +106,16 @@
     mode: '0600'
 
 - name: Stop existing Docker Compose services (if any)
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: "{{ project_dir }}"
     state: absent
   ignore_errors: yes
 
 - name: Start Docker Compose services
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: "{{ project_dir }}"
     state: present
-    build: yes
+    build: always
   register: output
 
 - name: Show Docker Compose output
