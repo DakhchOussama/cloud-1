@@ -1,7 +1,7 @@
 ---
 - name: Deploy WordPress Stack with Docker Compose
   hosts: webservers
-  become: yes
+  become: true
   vars:
     docker_compose_version: "2.24.5"
     project_dir: "/opt/inception"
