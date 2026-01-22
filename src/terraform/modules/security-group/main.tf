@@ -19,6 +19,14 @@ resource "aws_security_group" "this" {
   }
 
   ingress {
+    description = "phpMyAdmin"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["${var.my_ip}/32"]
+  }
+
+  ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
