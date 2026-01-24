@@ -1,35 +1,4 @@
 #!/usr/bin/env bash
-set -e
-
-# ===============================
-# Pre-flight checks (REQUIRED)
-# ===============================
-
-command -v terraform >/dev/null 2>&1 || {
-  echo "❌ Terraform not installed"
-  exit 1
-}
-
-command -v ansible >/dev/null 2>&1 || {
-  echo "❌ Ansible not installed"
-  exit 1
-}
-
-command -v docker >/dev/null 2>&1 || {
-  echo "❌ Docker not installed"
-  exit 1
-}
-
-command -v docker-compose >/dev/null 2>&1 || {
-  echo "❌ Docker Compose not installed"
-  exit 1
-}
-
-echo "✅ All required tools are installed"
-
-# ===============================
-# Load environment variables
-# ===============================
 
 # Source environment variables
 set -a
@@ -69,7 +38,7 @@ if ! terraform apply -auto-approve 2>&1 | tee /tmp/tf_output.log; then
 fi
 
 # Get the public IP from Terraform output
-PUBLIC_IP=$(terraform output instance_public_ip | tr -d '"')
+PUBLIC_IP=$(terraform output instance_elastic_ip | tr -d '"')
 echo "EC2 Public IP: $PUBLIC_IP"
 
 # Step 4: Update Ansible inventory
@@ -114,5 +83,5 @@ done
 ansible-playbook -i inventory.ini playbook.yml
 
 echo "=== Project Automation Complete ==="
-echo "Access your WordPress site at: https://$DUCKDNS_DOMAIN.duckdns.org"
+echo "Access your WordPress site at: https://$DUCKDNS_DOMAIN"
 echo "phpMyAdmin: http://$PUBLIC_IP:8080"

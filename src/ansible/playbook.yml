@@ -3,7 +3,7 @@
   hosts: webservers
   become: true
   vars:
-    docker_compose_version: "2.24.5"
+    docker_compose_version: "5.0.1"
     project_dir: "/opt/inception"
     
   roles:

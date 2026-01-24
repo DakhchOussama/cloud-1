@@ -125,7 +125,6 @@
 - name: Wait for services to be healthy
   pause:
     seconds: 30
-    prompt: "Waiting for services to start and become healthy..."
 
 - name: Verify containers are running
   community.docker.docker_container_info:
