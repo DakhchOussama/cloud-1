@@ -60,6 +60,15 @@ uninstall_ansible() {
 }
 
 main() {
+  echo -e "\n=== Starting Cleanup Process ==="
+  echo -e "\nDestroying any existing Terraform-managed infrastructure is recommended before uninstalling."
+  cd ./src/terraform || { echo "Terraform directory not found!"; exit 1; }
+  if command_exists terraform; then
+	terraform destroy -auto-approve || echo "Terraform destroy failed or no infrastructure to destroy."
+  else
+	echo "Terraform not found, skipping destroy step."
+  fi
+  cd - || exit 1
   echo "=== Cleanup Script for Terraform and Ansible ==="
   echo "This will remove Terraform and Ansible from your system."
   echo ""
