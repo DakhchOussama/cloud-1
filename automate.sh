@@ -1,6 +1,36 @@
 #!/usr/bin/env bash
 set -e
 
+# ===============================
+# Pre-flight checks (REQUIRED)
+# ===============================
+
+command -v terraform >/dev/null 2>&1 || {
+  echo "❌ Terraform not installed"
+  exit 1
+}
+
+command -v ansible >/dev/null 2>&1 || {
+  echo "❌ Ansible not installed"
+  exit 1
+}
+
+command -v docker >/dev/null 2>&1 || {
+  echo "❌ Docker not installed"
+  exit 1
+}
+
+command -v docker-compose >/dev/null 2>&1 || {
+  echo "❌ Docker Compose not installed"
+  exit 1
+}
+
+echo "✅ All required tools are installed"
+
+# ===============================
+# Load environment variables
+# ===============================
+
 # Source environment variables
 set -a
 source .env
