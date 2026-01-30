@@ -1,89 +1,72 @@
 #!/usr/bin/env bash
+
 set -e
 
-INSTALL_DIR="/usr/local/bin"
+echo "=== Cleaning up user-level dependencies ==="
 
-command_exists() {
-  command -v "$1" >/dev/null 2>&1
-}
+BIN_DIR="$HOME/goinfre/.bin"
+LOCAL_DIR="$HOME/goinfre/.local"
+PIP_CACHE="$HOME/goinfre/.cache/pip"
 
-uninstall_terraform() {
-  if ! command_exists terraform; then
-    echo "Terraform is not installed. Skipping..."
-    return 0
-  fi
+# ----------------------------
+# Remove Terraform
+# ----------------------------
+if [ -f "$BIN_DIR/terraform" ]; then
+    echo "Removing Terraform..."
+    rm -f "$BIN_DIR/terraform"
+else
+    echo "Terraform not found in $BIN_DIR"
+fi
 
-  echo -e "\n=== Uninstalling Terraform ==="
-  echo "Current version:"
-  terraform version
-  
-  if [ -f "$INSTALL_DIR/terraform" ]; then
-    sudo rm -f "$INSTALL_DIR/terraform"
-    echo "✓ Terraform removed from $INSTALL_DIR"
-  else
-    echo "✗ Terraform binary not found in $INSTALL_DIR"
-  fi
-  
-  if ! command_exists terraform; then
-    echo "✓ Terraform successfully uninstalled"
-  else
-    echo "⚠ Terraform still found in PATH. May be installed in another location."
-    which terraform
-  fi
-}
+# ----------------------------
+# Remove Ansible (pip --user)
+# ----------------------------
+echo "Removing Ansible (pip --user)..."
 
-uninstall_ansible() {
-  if ! command_exists ansible; then
-    echo "Ansible is not installed. Skipping..."
-    return 0
-  fi
+if command -v python3 >/dev/null 2>&1; then
+    python3 -m pip uninstall -y ansible ansible-core >/dev/null 2>&1 || true
+else
+    echo "python3 not found, skipping pip uninstall"
+fi
 
-  echo -e "\n=== Uninstalling Ansible ==="
-  echo "Current version:"
-  ansible --version
-  
-  if command_exists pip3; then
-    echo "Removing Ansible via pip..."
-    sudo pip3 uninstall -y ansible ansible-core || true
-    echo "✓ Ansible removed via pip"
-  else
-    echo "✗ pip3 not found. Cannot uninstall Ansible."
-    return 1
-  fi
-  
-  if ! command_exists ansible; then
-    echo "✓ Ansible successfully uninstalled"
-  else
-    echo "⚠ Ansible still found in PATH. May be installed in another location."
-    which ansible
-  fi
-}
+# Remove leftover ansible binaries
+for bin in ansible ansible-playbook ansible-galaxy ansible-inventory ansible-config; do
+    if [ -f "$LOCAL_DIR/bin/$bin" ]; then
+        rm -f "$LOCAL_DIR/bin/$bin"
+        echo "Removed $bin"
+    fi
+done
 
-main() {
-  echo -e "\n=== Starting Cleanup Process ==="
-  echo -e "\nDestroying any existing Terraform-managed infrastructure is recommended before uninstalling."
-  cd ./src/terraform || { echo "Terraform directory not found!"; exit 1; }
-  if command_exists terraform; then
-	terraform destroy -auto-approve || echo "Terraform destroy failed or no infrastructure to destroy."
-  else
-	echo "Terraform not found, skipping destroy step."
-  fi
-  cd - || exit 1
-  echo "=== Cleanup Script for Terraform and Ansible ==="
-  echo "This will remove Terraform and Ansible from your system."
-  echo ""
-  read -p "Do you want to continue? (y/N): " -n 1 -r
-  echo
-  
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Cleanup cancelled."
-    exit 0
-  fi
-  
-  uninstall_terraform
-  uninstall_ansible
-  
-  echo -e "\n=== Cleanup Complete ==="
-}
+# ----------------------------
+# Optional: Clean pip cache
+# ----------------------------
+if [ -d "$PIP_CACHE" ]; then
+    echo "Cleaning pip cache..."
+    rm -rf "$PIP_CACHE"
+fi
 
-main
+# ----------------------------
+# Optional: Remove empty dirs
+# ----------------------------
+rmdir "$BIN_DIR" 2>/dev/null || true
+rmdir "$LOCAL_DIR/bin" 2>/dev/null || true
+rmdir "$LOCAL_DIR" 2>/dev/null || true
+
+rm -rf ~/.ssh/ec2_instance
+rm -rf ~/.ssh/ec2_instance.pub
+
+# ----------------------------
+# Final verification
+# ----------------------------
+echo
+echo "Verification:"
+command -v terraform >/dev/null 2>&1 \
+    && echo "Terraform still found in PATH" \
+    || echo "Terraform removed"
+
+command -v ansible-playbook >/dev/null 2>&1 \
+    && echo "Ansible-playbook still found in PATH" \
+    || echo "Ansible removed"
+
+echo
+echo "Cleanup complete."
