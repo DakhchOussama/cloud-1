@@ -26,47 +26,15 @@ set +a
 echo "=== Starting Project Automation ==="
 
 # ============================
-# Step 0: Install Terraform (user-level)
+# Step 0: Generate SSH key
 # ============================
-if ! command -v terraform >/dev/null 2>&1; then
-    echo "Installing Terraform locally..."
-
-    TF_VERSION="1.14.3"
-    TF_ZIP="terraform_${TF_VERSION}_linux_amd64.zip"
-	TF_ZIP_PATH="$LOCAL_TMP/$TF_ZIP"
-
-    curl -fsSL -o $TF_ZIP_PATH \
-        "https://releases.hashicorp.com/terraform/${TF_VERSION}/${TF_ZIP}"
-
-    unzip -o "$TF_ZIP_PATH" -d "$BIN_DIR"
-    chmod +x "$BIN_DIR/terraform"
-
-    rm $TF_ZIP_PATH
-else
-    echo "Terraform already installed: $(terraform version | head -n1)"
-fi
-
-# ============================
-# Step 1: Install Ansible (user-level)
-# ============================
-if ! command -v ansible-playbook >/dev/null 2>&1; then
-    echo "Installing Ansible locally via pip..."
-    python3 -m pip install --user --upgrade pip
-    python3 -m pip install --user ansible
-else
-    echo "Ansible already installed: $(ansible --version | head -n1)"
-fi
-
-# ============================
-# Step 2: Generate SSH key
-# ============================
-echo "Step 2: Generating SSH key..."
+echo "Step 0: Generating SSH key..."
 ./launch.sh
 
 # ============================
-# Step 3: Terraform provisioning
+# Step 1: Terraform provisioning
 # ============================
-echo "Step 3: Provisioning infrastructure with Terraform..."
+echo "Step 1: Provisioning infrastructure with Terraform..."
 cd src/terraform
 
 terraform init
@@ -85,15 +53,15 @@ if ! terraform apply -auto-approve 2>&1 | tee /tmp/tf_output.log; then
 fi
 
 # ============================
-# Step 4: Get EC2 IP
+# Step 2: Get EC2 IP
 # ============================
 PUBLIC_IP=$(terraform output instance_elastic_ip | tr -d '"')
 echo "EC2 Public IP: $PUBLIC_IP"
 
 # ============================
-# Step 5: Update Ansible inventory
+# Step 3: Update Ansible inventory
 # ============================
-echo "Step 5: Updating Ansible inventory..."
+echo "Step 3: Updating Ansible inventory..."
 cd ../ansible
 
 cat > inventory.ini << EOF
@@ -108,9 +76,9 @@ EOF
 echo "Updated inventory.ini"
 
 # ============================
-# Step 6: Update DuckDNS
+# Step 4: Update DuckDNS
 # ============================
-echo "Step 6: Updating DuckDNS record..."
+echo "Step 4: Updating DuckDNS record..."
 if [ -n "$DUCKDNS_TOKEN" ] && [ -n "$DUCKDNS_DOMAIN" ]; then
     DUCKDNS_RESPONSE=$(curl -s \
         "https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=$PUBLIC_IP")
@@ -126,9 +94,9 @@ else
 fi
 
 # ============================
-# Step 7: Ansible deployment
+# Step 5: Ansible deployment
 # ============================
-echo "Step 7: Deploying with Ansible..."
+echo "Step 5: Deploying with Ansible..."
 echo "Waiting for SSH..."
 
 for i in {1..30}; do

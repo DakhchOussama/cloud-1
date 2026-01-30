@@ -1,124 +1,58 @@
 #!/usr/bin/env bash
+
 set -e
+set -o pipefail
 
-INSTALL_DIR="/usr/local/bin"
+# ============================
+# User-level binary setup
+# ============================
+BIN_DIR="$HOME/goinfre/.bin"
+LOCAL_BIN="$HOME/goinfre/.local/bin"
+LOCAL_TMP="$HOME/goinfre/tmp"
 
-command_exists() {
-  command -v "$1" >/dev/null 2>&1
-}
+mkdir -p "$BIN_DIR"
+mkdir -p "$LOCAL_BIN"
+mkdir -p "$LOCAL_TMP"
 
-install_packages() {
-  echo "Installing missing dependencies: $*"
+export PATH="$BIN_DIR:$LOCAL_BIN:$PATH"
 
-  if command_exists apt-get; then
-    sudo apt-get update -y
-    sudo apt-get install -y "$@"
-  else
-    echo "Unsupported package manager. Install dependencies manually."
-    exit 1
-  fi
-}
+# ============================
+# Load environment variables
+# ============================
+set -a
+source .env
+set +a
 
-check_dependencies() {
-  local -n deps=$1
-  local -n missing=$2
-  
-  echo "Checking required dependencies..."
-  for pkg in "${deps[@]}"; do
-    if ! command_exists "$pkg"; then
-      missing+=("$pkg")
-      echo "   $pkg is missing"
-    else
-      echo "   $pkg is installed"
-    fi
-  done
-}
+echo "=== Starting Project Automation ==="
 
-install_terraform() {
-  if command_exists terraform; then
-    echo "Terraform is already installed:"
-    terraform version
-    return 0
-  fi
+# ============================
+# Step 0: Install Terraform (user-level)
+# ============================
+if ! command -v terraform >/dev/null 2>&1; then
+    echo "Installing Terraform locally..."
 
-  echo -e "\n=== Installing Terraform ==="
-  
-  local deps=(curl wget unzip)
-  local missing_pkgs=()
-  check_dependencies deps missing_pkgs
-  
-  if [ "${#missing_pkgs[@]}" -ne 0 ]; then
-    install_packages "${missing_pkgs[@]}"
-  fi
+    TF_VERSION="1.14.3"
+    TF_ZIP="terraform_${TF_VERSION}_linux_amd64.zip"
+	TF_ZIP_PATH="$LOCAL_TMP/$TF_ZIP"
 
-  local os="$(uname | tr '[:upper:]' '[:lower:]')"
-  local arch="$(uname -m)"
+    curl -fsSL -o $TF_ZIP_PATH \
+        "https://releases.hashicorp.com/terraform/${TF_VERSION}/${TF_ZIP}"
 
-  case "$arch" in
-    x86_64) arch="amd64" ;;
-    aarch64 | arm64) arch="arm64" ;;
-    *)
-      echo "Unsupported architecture: $arch"
-      return 1
-      ;;
-  esac
+    unzip -o "$TF_ZIP_PATH" -d "$BIN_DIR"
+    chmod +x "$BIN_DIR/terraform"
 
-  local version=$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform \
-    | grep -oP '"current_version":"\K[^"]+')
+    rm $TF_ZIP_PATH
+else
+    echo "Terraform already installed: $(terraform version | head -n1)"
+fi
 
-  echo "Installing Terraform v$version ($os/$arch)"
-
-  local tmp_dir="$(mktemp -d)"
-  cd "$tmp_dir"
-
-  local zip="terraform_${version}_${os}_${arch}.zip"
-  local url="https://releases.hashicorp.com/terraform/${version}/${zip}"
-
-  curl -fsSL "$url" -o "$zip"
-  unzip -q "$zip"
-
-  chmod +x terraform
-  sudo mv terraform "$INSTALL_DIR/terraform"
-
-  cd /
-  rm -rf "$tmp_dir"
-
-  echo "Terraform installed successfully:"
-  terraform version
-}
-
-install_ansible() {
-  if command_exists ansible; then
-    echo "Ansible is already installed:"
-    ansible --version
-    return 0
-  fi
-
-  echo -e "\n=== Installing Ansible ==="
-  
-  local deps=(python3 python3-pip)
-  local missing_pkgs=()
-  check_dependencies deps missing_pkgs
-  
-  if [ "${#missing_pkgs[@]}" -ne 0 ]; then
-    install_packages "${missing_pkgs[@]}"
-  fi
-
-  echo "Installing Ansible via pip..."
-  sudo pip3 install ansible
-
-  echo "Ansible installed successfully:"
-  ansible --version
-}
-
-main() {
-  echo "=== Installation Script for Terraform and Ansible ==="
-  
-  install_terraform
-  install_ansible
-  
-  echo -e "\n=== Installation Complete ==="
-  echo "All tools are installed and ready to use."
-}
-
-main
+# ============================
+# Step 1: Install Ansible (user-level)
+# ============================
+if ! command -v ansible-playbook >/dev/null 2>&1; then
+    echo "Installing Ansible locally via pip..."
+    python3 -m pip install --user --upgrade pip
+    python3 -m pip install --user ansible
+else
+    echo "Ansible already installed: $(ansible --version | head -n1)"
+fi
